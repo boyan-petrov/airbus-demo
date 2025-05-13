@@ -1,0 +1,15 @@
+- name: Promote Oracle standby to primary
+  hosts: standby_db
+  become: true
+  tasks:
+    - name: Stop redo apply
+      ansible.builtin.shell: |
+        su - oracle -c "dgmgrl sys/password@ORCL 'edit database orcl set state='APPLY-OFF';'"
+
+    - name: Promote standby to primary
+      ansible.builtin.shell: |
+        su - oracle -c "dgmgrl sys/password@ORCL 'switchover to orcl;'"
+
+    - name: Confirm role change
+      ansible.builtin.shell: |
+        su - oracle -c "dgmgrl sys/password@ORCL 'show configuration;'"
