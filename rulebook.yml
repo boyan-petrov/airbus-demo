@@ -1,0 +1,23 @@
+- name: Oracle DRP Event Rulebook
+  hosts: localhost
+  sources:
+    - name: splunk-host-down
+      ansible.eda.webhook:
+        port: 5001
+        token: your-splunk-token
+    - name: dynatrace-alert
+      ansible.eda.webhook:
+        port: 5002
+        token: your-dynatrace-token
+  rules:
+    - name: Promote Oracle Standby (Splunk)
+      condition: event.payload.source == "splunk" and event.payload.type == "host_down" and event.payload.role == "primary_db"
+      actions:
+        - run_playbook:
+            name: playbooks/promote_standby.yml
+
+    - name: Promote Oracle Standby (Dynatrace)
+      condition: event.payload.source == "dynatrace" and event.payload.status == "PROBLEM" and "Primary DB Host Down" in event.payload.title
+      actions:
+        - run_playbook:
+            name: playbooks/promote_standby.yml
